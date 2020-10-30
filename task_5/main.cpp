@@ -3,16 +3,26 @@
 #include <cstring>
 
 /*
- *
-Слияние двух отсортированных массивов:
- - Выберем массив, крайний элемент которого меньше,
- - Извлечем этот элемент в массив-результат,
- - Продолжим, пока один из массивов не опустеет,
- - Копируем остаток второго массива в конец массива-результата
+ * 5_3. Закраска прямой 1.
+ * На числовой прямой окрасили N отрезков. Известны координаты левого и правого концов каждого отрезка (Li и Ri).
+ * Найти длину окрашенной части числовой прямой.
  */
 
 template<class T>
-void merge(const std::pair<T, int>* arr_first, int len_first, const std::pair<T, int>* arr_second, int len_second, std::pair<T, int>* c) {
+class CmpDefault {
+public:
+    bool operator()( const T& l, const T& r ) { return l < r; }
+};
+
+template<class T, class Compare = CmpDefault<T>>
+void merge
+(
+    const std::pair<T, int>* arr_first, int len_first,
+    const std::pair<T, int>* arr_second, int len_second,
+    std::pair<T, int>* c,
+    Compare cmp = CmpDefault<T>()
+)
+{
     int ind_first = 0;
     int ind_second = 0;
     int ind_c = 0;
@@ -38,7 +48,7 @@ void merge(const std::pair<T, int>* arr_first, int len_first, const std::pair<T,
 
         // выберем массив, крайний элемент которого меньше
         // извлечем этот элемент в массив-результат
-        if (arr_first[ind_first].first <= arr_second[ind_second].first) {
+        if (!cmp(arr_second[ind_second].first, arr_first[ind_first].first)) {
             c[ind_c] = arr_first[ind_first];
             ind_first++;
             ind_c++;
@@ -79,16 +89,20 @@ void run(std::pair<T, int>* arr, size_t num_of_elements) {
     for (int i = 0; i < num_of_elements; i++) {
         if (level > 0) {
             assert(i != 0);
-            assert((arr[i].first - arr[i-1].first) >= 0);
             counter += arr[i].first - arr[i-1].first;
         }
 
-        if (arr[i].second == UP)
-            level++;
-        else if (arr[i].second == DOWN)
-            level--;
-        else
-            assert(false);
+        switch(arr[i].second) {
+            case UP:
+                level++;
+                break;
+            case DOWN:
+                level--;
+                break;
+            default:
+                assert(false);
+        }
+
         assert(level >= 0);
     }
 
@@ -108,7 +122,7 @@ int main() {
         else
             arr[i].second = DOWN;
     }
-    
+
     run(arr, num_of_elements);
 
     delete[] arr;
@@ -117,6 +131,8 @@ int main() {
 
 
 /*
-5
-5 2 4 3 1
+3
+1 4
+7 8
+2 5
  */
