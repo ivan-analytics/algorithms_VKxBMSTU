@@ -1,13 +1,10 @@
 #include <iostream>
 
-// TODO: implement 256 alphabet
 int get_digit(std::string& str, int digit) {
     return (int) str[digit];
 }
 
-
-int* counting_sort(std::string* a, int n, int k, int digit) {
-    int* c = new int[k];
+void counting_sort(std::string* a, int n, int k, int digit, int* c) {
     for( int i = 0; i < k; ++i )
         c[i] = 0;
     for( int i = 0; i < n; ++i )
@@ -25,17 +22,11 @@ int* counting_sort(std::string* a, int n, int k, int digit) {
     for (int i = 0; i < n; i++)
         a[i] = b[i];
     delete[] b;
-
-    return c; // массив с расположением концов групп
 }
 
-void get_lines() {
-
-}
-
-void msd_sort(std::string* a, int n, int k, int digit) {
-    // TODO: сделать внешнее выделение памяти для с
-    int* c = counting_sort(a, n, k, digit);
+void msd_sort(std::string* a, int n, int k, int digit = 0) {
+    int* c = new int[k];
+    counting_sort(a, n, k, digit, c); // c - массив с расположением концов групп
     if (c[0] > 1) {
         if ((int) a[c[0] - 1][digit] != 0) {
             msd_sort(a + 0, c[0], k, digit + 1);
@@ -49,29 +40,38 @@ void msd_sort(std::string* a, int n, int k, int digit) {
             }
         }
     }
+    delete[] c;
 }
 
-#define ALPHABET_POWER 128
+#define ALPHABET_POWER 256
 
 int main() {
-    size_t num_of_str  = 5;
-    auto* str = new std::string[num_of_str];
-    for (int i = 0; i < num_of_str; i++)
-        std::getline(std::cin, str[i]);
+    // input
+    std::string val;
+    int num_of_str = 0, capacity = 2;
+    auto* str = new std::string[capacity];
+    while(std::getline(std::cin, val)) {
+        if (num_of_str >= capacity ) {
+            auto* new_string = new std::string [capacity * 2];
+            for( int i = 0; i < capacity; ++i )
+                new_string[i] = str[i];
 
-    msd_sort(str, num_of_str, ALPHABET_POWER, 0);
+            capacity *= 2;
+            delete [] str;
+            str = new_string;
+        }
 
-    std::cout << std::endl;
+        str[num_of_str] = val;
+        num_of_str++;
+    }
+
+    // logic
+    msd_sort(str, num_of_str, ALPHABET_POWER);
+
+    // output
     for (int i = 0; i < num_of_str; i++)
         std::cout << str[i] << std::endl;
+
+    delete[] str;
     return 0;
 }
-
-
-/*
-Hello from here
-meeek mike
-ddd
-sldjfksdf
-nkedmkek
- */
