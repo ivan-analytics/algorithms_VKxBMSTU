@@ -22,46 +22,11 @@ void counting_sort(int* a, int n, int k) {
     delete[] b;
 }
 
-void get_lines(std::string* lines, int& capacity) {
-    int num_of_lines = 0;
-    lines = new std::string[capacity];
+void get_lines() {
 
-    while (getline(std::cin, lines[num_of_lines])) {
-        if (lines[num_of_lines].empty()) {
-            break;
-        }
-        num_of_lines++;
-        if (num_of_lines == capacity) {
-            capacity *= 2;
-            auto* temp = lines;
-            lines = new std::string[capacity];
-            for (int i = 0; i < num_of_lines; i++)
-                lines[i] = temp[i];
-            delete[] temp;
-        }
-    }
-    for (int i = 0; i < num_of_lines; i++)
-        std::cout << lines[i] << std::endl;
 }
 
 int main() {
-    /*
-    int n;
-    std::cin >> n;
-    int* a = new int[n];
-    for (int i = 0; i < n; i++) std::cin >> a[i];
-
-    counting_sort(a, n, 10);
-
-    for (int i = 0; i < n; i++) std::cout << a[i] << " ";
-     */
-
-    int capacity = 3;
-    auto* lines = new std::string[capacity];
-    get_lines(lines, capacity);
-    delete[] lines;
-    std::cout << capacity;
-
-
+    
     return 0;
 }
