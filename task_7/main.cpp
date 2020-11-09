@@ -27,6 +27,13 @@ void get_lines() {
 }
 
 int main() {
-    
+    int n;
+    std::cin >> n;
+    int* a = new int[n];
+    for (int i = 0; i < n; i++) std::cin >> a[i];
+
+    counting_sort(a, n, 10);
+
+    for (int i = 0; i < n; i++) std::cout << a[i] << " ";
     return 0;
 }
