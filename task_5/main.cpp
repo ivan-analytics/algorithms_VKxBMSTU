@@ -8,18 +8,31 @@
  * Найти длину окрашенной части числовой прямой.
  */
 
+struct Point {
+    int coord;
+    int delta;
+};
+
 template<class T>
 class CmpDefault {
 public:
     bool operator()( const T& l, const T& r ) { return l < r; }
 };
 
+class CmpByPoint {
+public:
+    bool operator()( const Point& l, const Point& r ) { return l.coord < r.coord; }
+};
+
+
+
+
 template<class T, class Compare = CmpDefault<T>>
 void merge
 (
-    const std::pair<T, int>* arr_first, int len_first,
-    const std::pair<T, int>* arr_second, int len_second,
-    std::pair<T, int>* c,
+    const T* arr_first, int len_first,
+    const T* arr_second, int len_second,
+    T* c,
     Compare cmp = CmpDefault<T>()
 )
 {
@@ -48,7 +61,7 @@ void merge
 
         // выберем массив, крайний элемент которого меньше
         // извлечем этот элемент в массив-результат
-        if (!cmp(arr_second[ind_second].first, arr_first[ind_first].first)) {
+        if (!cmp(arr_second[ind_second], arr_first[ind_first])) {
             c[ind_c] = arr_first[ind_first];
             ind_first++;
             ind_c++;
@@ -61,46 +74,43 @@ void merge
     }
 }
 
-template<class T>
-void MergeSort(std::pair<T, int>* a, int aLen ) {
+template<class T, class Compare = CmpDefault<T>>
+void MergeSort(T* a, int aLen, Compare cmp = CmpDefault<T>()) {
     if( aLen <= 1 ) {
         return;
     }
     int firstLen = aLen / 2;
     int secondLen = aLen - firstLen;
-    MergeSort( a, firstLen );
-    MergeSort( a + firstLen, secondLen );
-    auto* c = new std::pair<T, int>[aLen];
-    merge(a, firstLen, a + firstLen, secondLen, c);
-    memcpy( a, c, sizeof( std::pair<T, int> ) * aLen );
+    MergeSort( a, firstLen, cmp);
+    MergeSort( a + firstLen, secondLen, cmp);
+    T* c = new T[aLen];
+    merge(a, firstLen, a + firstLen, secondLen, c, cmp);
+    memcpy(a, c, sizeof(T) * aLen);
     delete[] c;
 }
 
 #define UP 23
 #define DOWN 32
 
-template<class T>
-void run(std::pair<T, int>* arr, size_t num_of_elements) {
+void run(Point* arr, size_t num_of_elements) {
 
-    MergeSort(arr, num_of_elements);
+    MergeSort(arr, num_of_elements, CmpByPoint());
 
     int level = 0;
     int counter = 0;
     for (int i = 0; i < num_of_elements; i++) {
         if (level > 0) {
             assert(i != 0);
-            counter += arr[i].first - arr[i-1].first;
+            counter += arr[i].coord - arr[i-1].coord;
         }
 
-        switch(arr[i].second) {
+        switch(arr[i].delta) {
             case UP:
                 level++;
                 break;
             case DOWN:
                 level--;
                 break;
-            default:
-                assert(false);
         }
 
         assert(level >= 0);
@@ -114,13 +124,13 @@ int main() {
     size_t N = 0;
     std::cin >> N;
     size_t num_of_elements = N * 2;
-    auto* arr = (std::pair<int, int>*)(malloc(num_of_elements * sizeof(std::pair<int, int>)));
+    auto* arr = new Point[num_of_elements];
     for (int i = 0; i < num_of_elements; i++) {
-        std::cin >> arr[i].first;
+        std::cin >> arr[i].coord;
         if (i % 2 == 0)
-            arr[i].second = UP;
+            arr[i].delta = UP;
         else
-            arr[i].second = DOWN;
+            arr[i].delta = DOWN;
     }
 
     run(arr, num_of_elements);
