@@ -71,21 +71,32 @@ HashTable<T, H>::HashTable( H& _hasher ) :
 template<class T, class H>
 bool HashTable<T, H>::Add( const T& data )
 {
-	if (keysCount / table.size() > ALPHA)
+	if (keysCount / (float)table.size() > ALPHA)
 		growTable();
-
-	unsigned int hash = hasher( data ) % table.size();
 
 	int firstDelPos = -1;
 	for (int i = 0; i < table.size(); i++) {
-	    int hash = hasher(data, i);
-	    
+	    int hash = hasher(data, i) % table.size();
+	    if ((table[hash].type == HashTableCell::CellType::DELETED) && (firstDelPos == -1))
+	        firstDelPos = hash;
+        if ((table[hash].type == HashTableCell::CellType::DATA) && (table[hash].data == data))
+            return false;
+        if (table[hash].type == HashTableCell::CellType::EMPTY) {
+            if (firstDelPos != -1) {
+                table[firstDelPos].data = data;
+                table[firstDelPos].type = HashTableCell::CellType::DATA;
+            }
+            else {
+                table[hash].data = data;
+                table[hash].type = HashTableCell::CellType::DATA;
+            }
+            ++keysCount;
+            return true;
+        }
 	}
-
 	assert(firstDelPos >= 0);
 	table[firstDelPos].data = data;
 	table[firstDelPos].type = HashTableCell::CellType::DATA;
-
 	++keysCount;
 	return true;
 }
@@ -93,16 +104,38 @@ bool HashTable<T, H>::Add( const T& data )
 template<class T, class H>
 void HashTable<T, H>::growTable()
 {
-	vector<HashTableNode*> newTable( table.size() * 2, nullptr );
+	vector<HashTableCell> newTable( table.size() * 2, HashTableCell() );
 	for( size_t i = 0; i < table.size(); ++i ) {
-		HashTableNode* node = table[i];
-		while( node != nullptr ) {
-			HashTableNode* nextNode = node->Next;
-			unsigned int newHash = hasher( node->Data ) % newTable.size();
-			node->Next = newTable[newHash];
-			newTable[newHash] = node;
-			node = nextNode;
-		}
+	    if ((table[i].type == HashTableCell::CellType::DELETED) || (table[i].type == HashTableCell::CellType::EMPTY))
+            continue;
+        int firstDelPos = -1;
+        bool isAdded = false;
+        T data = table[i].data;
+        for (int j = 0; j < newTable.size(); j++) {
+            int hash = hasher(data, j) % newTable.size();
+            if ((newTable[hash].type == HashTableCell::CellType::DELETED) && (firstDelPos == -1))
+                firstDelPos = hash;
+            if (newTable[hash].type == HashTableCell::CellType::EMPTY) {
+                if (firstDelPos != -1) {
+                    newTable[firstDelPos].data = data;
+                    newTable[firstDelPos].type = HashTableCell::CellType::DATA;
+                }
+                else {
+                    newTable[hash].data = data;
+                    newTable[hash].type = HashTableCell::CellType::DATA;
+                }
+                isAdded = true;
+                break;
+            }
+
+            if ((newTable[hash].type == HashTableCell::CellType::DATA) && (newTable[hash].data == data))
+                assert(false);
+        }
+        if (!isAdded) {
+            assert(firstDelPos >= 0);
+            newTable[firstDelPos].data = data;
+            newTable[firstDelPos].type = HashTableCell::CellType::DATA;
+        }
 	}
 	table = std::move( newTable );
 }
@@ -110,36 +143,32 @@ void HashTable<T, H>::growTable()
 template<class T, class H>
 bool HashTable<T, H>::Has( const T& data ) const
 {
-	int hash = hasher( data ) % table.size();
-	HashTableNode* node = table[hash];
-	while( node != nullptr && node->Data != data )
-		node = node->Next;
-
-	return node != nullptr;
+    for (int i = 0; i < table.size(); i++) {
+        int hash = hasher(data, i) % table.size();
+        if ((table[hash].type == HashTableCell::CellType::DATA) && (table[hash].data == data))
+            return true;
+        if (table[hash].type == HashTableCell::CellType::EMPTY) {
+            return false;
+        }
+    }
+    return false;
 }
 
 template<class T, class H>
 bool HashTable<T, H>::Delete( const T& data )
 {
-	unsigned int hash = hasher( data ) % table.size();
-	HashTableNode* prevNode = nullptr;
-	HashTableNode* node = table[hash];
-	while( node != nullptr && node->Data != data ) {
-		prevNode = node;
-		node = node->Next;
-	}
-
-	if( node == nullptr ) // ключа нет
-		return false;
-
-	if( prevNode == nullptr ) // удаление из начала списка
-		table[hash] = node->Next;
-	else
-		prevNode->Next = node->Next;
-	delete node;
-
-	--keysCount;
-	return true;
+    for (int i = 0; i < table.size(); i++) {
+        int hash = hasher(data, i) % table.size();
+        if ((table[hash].type == HashTableCell::CellType::DATA) && (table[hash].data == data)) {
+            table[hash].type = HashTableCell::CellType::DELETED;
+            --keysCount;
+            return true;
+        }
+        if (table[hash].type == HashTableCell::CellType::EMPTY) {
+            return false;
+        }
+    }
+    return false;
 }
 
 struct ProbHasher
@@ -160,8 +189,8 @@ struct ProbHasher
 
 int main()
 {
-	Hasher hasher;
-	HashTable<string, Hasher> table( hasher );
+    ProbHasher hasher;
+	HashTable<string, ProbHasher> table( hasher );
 	char operation;
 	string word;
 	while( cin >> operation >> word ) {
@@ -177,11 +206,62 @@ int main()
 }
 
 /*
++ test1
++ test2
++ test3
++ test4
++ test5
++ test6
++ test7
++ test8
++ test9
++ test10
++ test11
++ test12
++ test13
++ test14
++ test15
++ test16
++ test17
++ test18
+
+ */
+
+
+/*
 + hello
 + bye
++ byed
++ byee
++ byeesd
++ byeff
++ byed
++ byed
++ byedw
++ byedd
++ byeds
++ byeddff
 ? bye
-+ bye
-- bye
++ byes
++ byesee
++ byeseee
+- byee
 ? bye
 ? hello
+? hello
+? hello
+- hello
+- hello
+- hello
+? hello
+? hello
++ test
+? test
+- test
+? test
+- test
+? test
++ test
+? test
+
 */
