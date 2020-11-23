@@ -1,7 +1,8 @@
 #include <iostream>
 #include <vector>
-#include <assert.h>
+#include <cassert>
 #include <string>
+#include <cmath>
 
 using std::vector;
 using std::string;
@@ -173,11 +174,13 @@ bool HashTable<T, H>::Delete( const T& data )
 
 struct ProbHasher
 {
-    // TODO: сделать через вычисление значения многочлена методом Горнера
+    // вычисление хэша строки методом Горнера
     unsigned int hash( const string& data ) const {
         int hash = 0;
-        for (char i : data)
-            hash = hash * 7 + i;
+        int a = 7;
+        for (int i = 0; i < data.size(); i++) {
+            hash += data[i] * (int)pow(a, i);
+        }
         return hash;
     }
 
@@ -204,64 +207,3 @@ int main()
 
 	return 0;
 }
-
-/*
-+ test1
-+ test2
-+ test3
-+ test4
-+ test5
-+ test6
-+ test7
-+ test8
-+ test9
-+ test10
-+ test11
-+ test12
-+ test13
-+ test14
-+ test15
-+ test16
-+ test17
-+ test18
-
- */
-
-
-/*
-+ hello
-+ bye
-+ byed
-+ byee
-+ byeesd
-+ byeff
-+ byed
-+ byed
-+ byedw
-+ byedd
-+ byeds
-+ byeddff
-? bye
-+ byes
-+ byesee
-+ byeseee
-- byee
-? bye
-? hello
-? hello
-? hello
-- hello
-- hello
-- hello
-? hello
-? hello
-+ test
-? test
-- test
-? test
-- test
-? test
-+ test
-? test
-
-*/
