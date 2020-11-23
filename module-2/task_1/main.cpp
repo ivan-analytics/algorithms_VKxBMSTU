@@ -14,80 +14,78 @@ public:
 	explicit HashTable( H& hasher );
 	HashTable( const HashTable& ) = delete;
 	HashTable& operator=( const HashTable& ) = delete;
-	~HashTable();
+	~HashTable() = default;
 
 	// Каждый метод должен работать не более чем за один проход по таблице
 	// Для каждого метода вычислять хэш надо один раз (за исключением growTable)
 
 	// Пробируемся не более М раз, если больше - ассертим что firstDelPos нашли и вставляем в него
-	// Если Del - идём дальше, но запоинаем firstDelPos если раньше Del не встречали
-	// Если Data - или идём дальше или return false
+	// Если Del - идём дальше, но запоминаем firstDelPos если раньше Del не встречали
+	// Если data - или идём дальше или return false
 	// Если Empty - вставляем в firstDelPos если такой находили, если нет - вставляем в текущую ячейку
 	bool Add( const T& data );
 
 	// Пробируемся не более М раз, если больше - return false
 	// Если Del - идём дальше
-	// Если Data - или идём дальше или return true
+	// Если data - или идём дальше или return true
 	// Если Empty - return false
 	bool Has( const T& data ) const;
 
 	// Пробируемся не более М раз, если больше - return false
 	// Если Del - идём дальше
-	// Если Data - или идём дальше или помечаем Del и return true
+	// Если data - или идём дальше или помечаем Del и return true
 	// Если Empty - return false
 	bool Delete( const T& data );
 
 private:
-	struct HashTableNode {
-		T Data;
-		HashTableNode* Next; // TCellType = Key/Del/Empty
+	struct HashTableCell {
+	    enum CellType {
+	        DATA,
+	        EMPTY,
+	        DELETED
+	    };
 
-		HashTableNode() : Next( nullptr ) {}
-		HashTableNode( const T& data, HashTableNode* next ) : Data( data ), Next( next ) {}
+		T data;
+		CellType type; // TCellType = Key/Del/Empty
+
+        HashTableCell() : type(CellType::EMPTY) {}
+		HashTableCell(const T& data) : data(data), type(CellType::DATA) {}
 	};
 	H hasher;
-	vector<HashTableNode*> table; // vector<HashTableNode>
+	vector<HashTableCell> table; // vector<HashTableCell>
 	size_t keysCount;
 
-	void growTable(); // при alpha = 2/3
+	void growTable(); // при alpha = 3/4
+    #define ALPHA 0.75
 };
+
 
 template<class T, class H>
 HashTable<T, H>::HashTable( H& _hasher ) :
 	hasher( _hasher ),
-	table( 8, nullptr ),
+	table( 8, HashTableCell()),
 	keysCount( 0 )
 {
 }
 
 template<class T, class H>
-HashTable<T, H>::~HashTable()
-{
-	for( size_t i = 0; i < table.size(); ++i ) {
-		HashTableNode* node = table[i];
-		while( node != nullptr ) {
-			HashTableNode* nextNode = node->Next;
-			delete node;
-			node = nextNode;
-		}
-	}
-}
-
-template<class T, class H>
 bool HashTable<T, H>::Add( const T& data )
 {
-	if( keysCount > 3 * table.size() )
+	if (keysCount / table.size() > ALPHA)
 		growTable();
 
 	unsigned int hash = hasher( data ) % table.size();
-	HashTableNode* node = table[hash];
-	while( node != nullptr && node->Data != data )
-		node = node->Next;
 
-	if( node != nullptr )
-		return false;
+	int firstDelPos = -1;
+	for (int i = 0; i < table.size(); i++) {
+	    int hash = hasher(data, i);
+	    
+	}
 
-	table[hash] = new HashTableNode( data, table[hash] );
+	assert(firstDelPos >= 0);
+	table[firstDelPos].data = data;
+	table[firstDelPos].type = HashTableCell::CellType::DATA;
+
 	++keysCount;
 	return true;
 }
@@ -144,13 +142,19 @@ bool HashTable<T, H>::Delete( const T& data )
 	return true;
 }
 
-struct Hasher
+struct ProbHasher
 {
-	unsigned int operator()( const string& data ) const {
-		int hash = 0;
-		for( size_t i = 0; i < data.size(); ++i )
-			hash = hash * 7 + data[i];
-		return hash;
+    // TODO: сделать через вычисление значения многочлена методом Горнера
+    unsigned int hash( const string& data ) const {
+        int hash = 0;
+        for (char i : data)
+            hash = hash * 7 + i;
+        return hash;
+    }
+
+    // квадратичное пробирование, c = 0.5
+	unsigned int operator()( const string& data, unsigned int i ) const {
+        return hash(data) + (i * (i + 1)) / 2;
 	}
 };
 
