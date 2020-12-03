@@ -1,8 +1,9 @@
 #include <iostream>
 #include <stack>
 #include <queue>
+#include <cassert>
 
-// TODO: исправить post order итеративную реализацию в задаче 2 !!!
+// 3_2. Декартово дерево. Разница ширин
 
 class BinTree {
 public:
@@ -11,7 +12,8 @@ public:
 
     void Add( int key );
     void PreOrderDFS(void visit(int ) );
-    int getMaxWidth();
+
+    int GetMaxWidth();
 
 private:
     struct Node {
@@ -39,16 +41,33 @@ BinTree::~BinTree()
 
 void BinTree::postOrderDFS( Node* node, void visit( Node* ) )
 {
-    std::stack<Node*> stack;
-    stack.push(node);
+    std::stack<Node*> main_stack;
+    std::stack<Node*> visit_stack;
+    main_stack.push(nullptr);
+    main_stack.push(node);
+    visit_stack.push(node);
 
-    while(!stack.empty()) {
-        Node* cur = stack.top();
-        stack.pop();
+    while(!main_stack.empty()) {
+        Node* cur = main_stack.top();
+        main_stack.pop();
 
-        if (cur->Right != nullptr) stack.push(cur->Right);
-        if (cur->Left != nullptr) stack.push(cur->Left);
-        visit(cur);
+        if (cur == nullptr) {
+            Node* visit_node = visit_stack.top();
+            visit_stack.pop();
+
+            visit(visit_node);
+        }
+
+        if ((cur != nullptr) && (cur->Right != nullptr)) {
+            main_stack.push(nullptr);
+            main_stack.push(cur->Right);
+            visit_stack.push(cur->Right);
+        }
+        if ((cur != nullptr) && (cur->Left != nullptr)) {
+            main_stack.push(nullptr);
+            main_stack.push(cur->Left);
+            visit_stack.push(cur->Left);
+        }
     }
 }
 
@@ -92,7 +111,7 @@ void BinTree::preOrderDFS(Node* node, void visit(int ) )
     }
 }
 
-int BinTree::getMaxWidth() {
+int BinTree::GetMaxWidth() {
     std::queue<Node*> queue;
     queue.push(root);
     queue.push(nullptr);
@@ -126,8 +145,9 @@ public:
     ~DecartTree();
 
     void Add( int key, int priority );
-    void InOrderDFS(void visit(int ) );
-    int getMaxWidth();
+    void InOrderDFS(void visit(int ));
+
+    int GetMaxWidth();
 
 private:
     struct Node {
@@ -142,7 +162,7 @@ private:
 
     void inOrderDFS(Node* node, void visit(int ) );
     void postOrderDFS( Node* node, void visit( Node* ) );
-    void Split( Node* currentNode, int key, Node*& left, Node*& right );
+    void split(Node* currentNode, int key, Node*& left, Node*& right );
 };
 
 DecartTree::DecartTree() : root(nullptr)
@@ -154,15 +174,15 @@ DecartTree::~DecartTree()
     postOrderDFS( root, []( Node* node ) { delete node; } );
 }
 
-void DecartTree::Split(Node* currentNode, int key, Node*& left, Node*& right ) {
+void DecartTree::split(Node* currentNode, int key, Node*& left, Node*& right ) {
     if( currentNode == nullptr ) {
         left = nullptr;
         right = nullptr;
     } else if( currentNode->Key <= key ) {
-        Split( currentNode->Right, key, currentNode->Right, right );
+        split(currentNode->Right, key, currentNode->Right, right);
         left = currentNode;
     } else {
-        Split( currentNode->Left, key, left, currentNode->Left );
+        split(currentNode->Left, key, left, currentNode->Left);
         right = currentNode;
     }
 }
@@ -178,7 +198,7 @@ void DecartTree::postOrderDFS(Node* node, void visit(Node* ) ) // для нес�
     visit( node );
 }
 
-int DecartTree::getMaxWidth() {
+int DecartTree::GetMaxWidth() {
     std::queue<Node*> queue;
     queue.push(root);
     queue.push(nullptr);
@@ -210,12 +230,13 @@ void DecartTree::Add(int key, int priority )
 {
     enum Direction {
         RIGHT,
-        LEFT
+        LEFT,
+        FAILED
     };
     Node* newNode = new Node( key, priority );
 
     // находим первый элемент с меньшим приоритетом
-    Direction direction;
+    Direction direction = Direction::FAILED;
     Node* prev = nullptr;
     Node* cur = root;
 
@@ -227,7 +248,7 @@ void DecartTree::Add(int key, int priority )
 
     // случай когда вставляемый элемент имеет наибольший приоритет
     if (cur->Priority < priority) {
-        Split(root, key, newNode->Left, newNode->Right);
+        split(root, key, newNode->Left, newNode->Right);
         root = newNode;
         return;
     }
@@ -244,15 +265,17 @@ void DecartTree::Add(int key, int priority )
         }
     }
 
+    if (direction == Direction::FAILED) assert(false);
+
     // подцепляем родителя к новому элементу
     if (direction == Direction::RIGHT) prev->Right = newNode;
     else prev->Left = newNode;
 
-    Split(cur, key, newNode->Left, newNode->Right);
+    split(cur, key, newNode->Left, newNode->Right);
 }
 
 
-void DecartTree::InOrderDFS(void visit(int ) )
+void DecartTree::InOrderDFS(void visit(int ))
 {
     inOrderDFS(root, visit);
 }
@@ -273,30 +296,6 @@ int main()
     DecartTree tree;
     BinTree binTree;
 
-//    tree.Add( 5, 11 );
-//    tree.Add( 18, 8 );
-//    tree.Add( 25, 7 );
-//    tree.Add( 50, 12 );
-//    tree.Add( 30, 30 );
-//    tree.Add( 15, 15 );
-//    tree.Add( 20, 10 );
-//    tree.Add( 22, 5 );
-//    tree.Add( 40, 20 );
-//    tree.Add( 45, 9 );
-    // std::cout << tree.getMaxWidth() << std::endl;
-
-//    binTree.Add( 5 );
-//    binTree.Add( 18 );
-//    binTree.Add( 25 );
-//    binTree.Add( 50 );
-//    binTree.Add( 30 );
-//    binTree.Add( 15 );
-//    binTree.Add( 20 );
-//    binTree.Add( 22 );
-//    binTree.Add( 40 );
-//    binTree.Add( 45 );
-    // std::cout << binTree.getMaxWidth() << std::endl;
-
     size_t n;
     std::cin >> n;
     for (size_t i = 0; i < n; i++) {
@@ -306,23 +305,8 @@ int main()
         binTree.Add( key );
     }
 
-    std::cout << tree.getMaxWidth() - binTree.getMaxWidth() << std::endl;
-
-//    tree.InOrderDFS([](int key) { std::cout << key << " "; });
-//    std::cout << std::endl;
-//    binTree.PreOrderDFS([](int key) { std::cout << key << " "; });
+    std::cout << tree.GetMaxWidth() - binTree.GetMaxWidth() << std::endl;
 
     return 0;
 }
 
-//10
-//5 11
-//18 8
-//25 7
-//50 12
-//30 30
-//15 15
-//20 10
-//22 5
-//40 20
-//45 9
