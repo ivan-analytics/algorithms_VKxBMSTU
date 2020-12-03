@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stack>
 
 class BinTree {
 public:
@@ -35,13 +36,17 @@ BinTree::~BinTree()
 // TODO: заменить рекурсивный обход итеративным
 void BinTree::postOrderDFS( Node* node, void visit( Node* ) ) // для несбалансированного дерева не применимо
 {
-    if( node == nullptr ) {
-        return;
-    }
+    std::stack<Node*> stack;
+    stack.push(node);
 
-    postOrderDFS( node->Left, visit );
-    postOrderDFS( node->Right, visit );
-    visit( node );
+    while(!stack.empty()) {
+        Node* cur = stack.top();
+        stack.pop();
+
+        if (cur->Right != nullptr) stack.push(cur->Right);
+        if (cur->Left != nullptr) stack.push(cur->Left);
+        visit(cur);
+    }
 }
 
 void BinTree::Add( int key )
@@ -71,25 +76,29 @@ void BinTree::PreOrderDFS(void visit(int ) )
 // TODO: заменить рекурсивный обход итеративным
 void BinTree::preOrderDFS(Node* node, void visit(int ) ) // для несбалансированного дерева не применимо
 {
-    if( node == nullptr ) {
-        return;
-    }
+    std::stack<Node*> stack;
+    stack.push(node);
 
-    visit( node->Key );
-    preOrderDFS(node->Left, visit);
-    preOrderDFS(node->Right, visit);
+    while(!stack.empty()) {
+        Node* cur = stack.top();
+        stack.pop();
+
+        visit(cur->Key);
+        if (cur->Right != nullptr) stack.push(cur->Right);
+        if (cur->Left != nullptr) stack.push(cur->Left);
+    }
 }
 
 int main()
 {
     BinTree tree;
-    tree.Add( 10 );
-    tree.Add( 5 );
-    tree.Add( 20 );
-    tree.Add( 1 );
-    tree.Add( 7 );
-    tree.Add( 15 );
-    tree.Add( 17 );
+    size_t n;
+    std::cin >> n;
+    for (size_t i = 0; i < n; i++) {
+        int key;
+        std::cin >> key;
+        tree.Add( key );
+    }
 
     tree.PreOrderDFS([](int key) { std::cout << key << " "; });
 
