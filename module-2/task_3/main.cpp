@@ -1,5 +1,6 @@
 #include <iostream>
 #include <stack>
+#include <queue>
 
 // TODO: исправить post order итеративную реализацию в задаче 2 !!!
 
@@ -10,6 +11,7 @@ public:
 
     void Add( int key );
     void PreOrderDFS(void visit(int ) );
+    int getMaxWidth();
 
 private:
     struct Node {
@@ -90,6 +92,34 @@ void BinTree::preOrderDFS(Node* node, void visit(int ) )
     }
 }
 
+int BinTree::getMaxWidth() {
+    std::queue<Node*> queue;
+    queue.push(root);
+    queue.push(nullptr);
+
+    int maxWidth = -1;
+
+    while (!queue.empty()) {
+        Node* cur = queue.front();
+        queue.pop();
+
+        // случай начала нового слоя
+        if (cur == nullptr) {
+            if (queue.empty()) break;
+            int layerWidth = queue.size();
+            if (layerWidth > maxWidth) maxWidth = layerWidth;
+
+            queue.push(nullptr);
+        }
+        else {
+            if (cur->Right != nullptr) queue.push(cur->Right);
+            if (cur->Left != nullptr) queue.push(cur->Left);
+        }
+    }
+
+    return maxWidth;
+}
+
 class DecartTree {
 public:
     DecartTree();
@@ -97,6 +127,7 @@ public:
 
     void Add( int key, int priority );
     void InOrderDFS(void visit(int ) );
+    int getMaxWidth();
 
 private:
     struct Node {
@@ -149,6 +180,34 @@ void DecartTree::postOrderDFS(Node* node, void visit(Node* ) ) // для нес�
         if (cur->Left != nullptr) stack.push(cur->Left);
         visit(cur);
     }
+}
+
+int DecartTree::getMaxWidth() {
+    std::queue<Node*> queue;
+    queue.push(root);
+    queue.push(nullptr);
+
+    int maxWidth = -1;
+
+    while (!queue.empty()) {
+        Node* cur = queue.front();
+        queue.pop();
+
+        // случай начала нового слоя
+        if (cur == nullptr) {
+            if (queue.empty()) break;
+            int layerWidth = queue.size();
+            if (layerWidth > maxWidth) maxWidth = layerWidth;
+
+            queue.push(nullptr);
+        }
+        else {
+            if (cur->Right != nullptr) queue.push(cur->Right);
+            if (cur->Left != nullptr) queue.push(cur->Left);
+        }
+    }
+
+    return maxWidth;
 }
 
 void DecartTree::Add(int key, int priority )
@@ -215,46 +274,49 @@ void DecartTree::inOrderDFS(int curDepth, int& maxDepth, Node* node, void visit(
     inOrderDFS(curDepth+1, maxDepth, node->Right, visit);
 }
 
-
-
 int main()
 {
     DecartTree tree;
     BinTree binTree;
 
-    tree.Add( 5, 11 );
-    tree.Add( 18, 8 );
-    tree.Add( 25, 7 );
-    tree.Add( 50, 12 );
-    tree.Add( 30, 30 );
-    tree.Add( 15, 15 );
-    tree.Add( 20, 10 );
-    tree.Add( 22, 5 );
-    tree.Add( 40, 20 );
-    tree.Add( 45, 9 );
+//    tree.Add( 5, 11 );
+//    tree.Add( 18, 8 );
+//    tree.Add( 25, 7 );
+//    tree.Add( 50, 12 );
+//    tree.Add( 30, 30 );
+//    tree.Add( 15, 15 );
+//    tree.Add( 20, 10 );
+//    tree.Add( 22, 5 );
+//    tree.Add( 40, 20 );
+//    tree.Add( 45, 9 );
+    // std::cout << tree.getMaxWidth() << std::endl;
 
-    binTree.Add( 5 );
-    binTree.Add( 18 );
-    binTree.Add( 25 );
-    binTree.Add( 50 );
-    binTree.Add( 30 );
-    binTree.Add( 15 );
-    binTree.Add( 20 );
-    binTree.Add( 22 );
-    binTree.Add( 40 );
-    binTree.Add( 45 );
+//    binTree.Add( 5 );
+//    binTree.Add( 18 );
+//    binTree.Add( 25 );
+//    binTree.Add( 50 );
+//    binTree.Add( 30 );
+//    binTree.Add( 15 );
+//    binTree.Add( 20 );
+//    binTree.Add( 22 );
+//    binTree.Add( 40 );
+//    binTree.Add( 45 );
+    // std::cout << binTree.getMaxWidth() << std::endl;
 
-//    size_t n;
-//    std::cin >> n;
-//    for (size_t i = 0; i < n; i++) {
-//        int key;
-//        std::cin >> key;
-//        tree.Add( key );
-//    }
+    size_t n;
+    std::cin >> n;
+    for (size_t i = 0; i < n; i++) {
+        int key, priority;
+        std::cin >> key >> priority;
+        tree.Add( key, priority );
+        binTree.Add( key );
+    }
 
-    tree.InOrderDFS([](int key) { std::cout << key << " "; });
-    std::cout << std::endl;
-    binTree.PreOrderDFS([](int key) { std::cout << key << " "; });
+    std::cout << tree.getMaxWidth() - binTree.getMaxWidth() << std::endl;
+
+//    tree.InOrderDFS([](int key) { std::cout << key << " "; });
+//    std::cout << std::endl;
+//    binTree.PreOrderDFS([](int key) { std::cout << key << " "; });
 
     return 0;
 }
