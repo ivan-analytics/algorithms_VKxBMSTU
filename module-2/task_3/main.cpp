@@ -140,7 +140,7 @@ private:
     };
     Node* root;
 
-    void inOrderDFS(int curDepth, int& maxDepth, Node* node, void visit(int ) );
+    void inOrderDFS(Node* node, void visit(int ) );
     void postOrderDFS( Node* node, void visit( Node* ) );
     void Split( Node* currentNode, int key, Node*& left, Node*& right );
 };
@@ -169,17 +169,13 @@ void DecartTree::Split(Node* currentNode, int key, Node*& left, Node*& right ) {
 
 void DecartTree::postOrderDFS(Node* node, void visit(Node* ) ) // для несбалансированного дерева не применимо
 {
-    std::stack<Node*> stack;
-    stack.push(node);
-
-    while(!stack.empty()) {
-        Node* cur = stack.top();
-        stack.pop();
-
-        if (cur->Right != nullptr) stack.push(cur->Right);
-        if (cur->Left != nullptr) stack.push(cur->Left);
-        visit(cur);
+    if( node == nullptr ) {
+        return;
     }
+
+    postOrderDFS(node->Left, visit);
+    postOrderDFS(node->Right, visit);
+    visit( node );
 }
 
 int DecartTree::getMaxWidth() {
@@ -258,20 +254,18 @@ void DecartTree::Add(int key, int priority )
 
 void DecartTree::InOrderDFS(void visit(int ) )
 {
-    int maxDepth = -1;
-    inOrderDFS(1, maxDepth, root, visit);
-    std::cout << std::endl << "Height of tree: " << maxDepth;
+    inOrderDFS(root, visit);
 }
 
-void DecartTree::inOrderDFS(int curDepth, int& maxDepth, Node* node, void visit(int ) )
+void DecartTree::inOrderDFS(Node* node, void visit( int ) )
 {
     if( node == nullptr ) {
         return;
     }
-    if (curDepth > maxDepth) maxDepth = curDepth;
-    inOrderDFS(curDepth+1, maxDepth, node->Left, visit);
+
+    inOrderDFS(node->Left, visit);
     visit( node->Key );
-    inOrderDFS(curDepth+1, maxDepth, node->Right, visit);
+    inOrderDFS(node->Right, visit);
 }
 
 int main()
