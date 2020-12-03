@@ -1,6 +1,95 @@
 #include <iostream>
 #include <stack>
 
+// TODO: исправить post order итеративную реализацию в задаче 2 !!!
+
+class BinTree {
+public:
+    BinTree();
+    ~BinTree();
+
+    void Add( int key );
+    void PreOrderDFS(void visit(int ) );
+
+private:
+    struct Node {
+        Node* Left;
+        Node* Right;
+        int Key;
+
+        explicit Node( int key ) : Left( nullptr ), Right( nullptr ), Key( key ) {}
+    };
+    Node* root;
+
+    void add( Node*& node, int key );
+    void preOrderDFS(Node* node, void visit(int ) );
+    void postOrderDFS( Node* node, void visit( Node* ) );
+};
+
+BinTree::BinTree() : root( nullptr )
+{
+}
+
+BinTree::~BinTree()
+{
+    postOrderDFS( root, []( Node* node ) { delete node; } );
+}
+
+void BinTree::postOrderDFS( Node* node, void visit( Node* ) )
+{
+    std::stack<Node*> stack;
+    stack.push(node);
+
+    while(!stack.empty()) {
+        Node* cur = stack.top();
+        stack.pop();
+
+        if (cur->Right != nullptr) stack.push(cur->Right);
+        if (cur->Left != nullptr) stack.push(cur->Left);
+        visit(cur);
+    }
+}
+
+void BinTree::Add( int key )
+{
+    add( root, key );
+}
+
+void BinTree::add( Node*& node, int key )
+{
+    if( node == nullptr ) {
+        node = new Node( key );
+        return;
+    }
+
+    if( key < node->Key ) {
+        add( node->Left, key );
+    } else {
+        add( node->Right, key );
+    }
+}
+
+void BinTree::PreOrderDFS(void visit(int ) )
+{
+    preOrderDFS(root, visit);
+}
+
+
+void BinTree::preOrderDFS(Node* node, void visit(int ) )
+{
+    std::stack<Node*> stack;
+    stack.push(node);
+
+    while(!stack.empty()) {
+        Node* cur = stack.top();
+        stack.pop();
+
+        visit(cur->Key);
+        if (cur->Right != nullptr) stack.push(cur->Right);
+        if (cur->Left != nullptr) stack.push(cur->Left);
+    }
+}
+
 class DecartTree {
 public:
     DecartTree();
@@ -20,10 +109,8 @@ private:
     };
     Node* root;
 
-    void add( Node*& node, int key );
-    void inOrderDFS(Node* node, void visit(int ) );
+    void inOrderDFS(int curDepth, int& maxDepth, Node* node, void visit(int ) );
     void postOrderDFS( Node* node, void visit( Node* ) );
-    Node* merge( Node* left, Node* right );
     void Split( Node* currentNode, int key, Node*& left, Node*& right );
 };
 
@@ -34,19 +121,6 @@ DecartTree::DecartTree() : root(nullptr)
 DecartTree::~DecartTree()
 {
     postOrderDFS( root, []( Node* node ) { delete node; } );
-}
-
-DecartTree::Node* DecartTree::merge(Node* left, Node* right ) {
-    if( left == nullptr || right == nullptr ) {
-        return left == nullptr ? right : left;
-    }
-    if( left->Priority > right->Priority ) {
-        left->Right = merge( left->Right, right );
-        return left;
-    } else {
-        right->Left = merge( left, right->Left );
-        return right;
-    }
 }
 
 void DecartTree::Split(Node* currentNode, int key, Node*& left, Node*& right ) {
@@ -125,35 +199,28 @@ void DecartTree::Add(int key, int priority )
 
 void DecartTree::InOrderDFS(void visit(int ) )
 {
-    inOrderDFS(root, visit);
+    int maxDepth = -1;
+    inOrderDFS(1, maxDepth, root, visit);
+    std::cout << std::endl << "Height of tree: " << maxDepth;
 }
 
-void DecartTree::inOrderDFS(Node* node, void visit(int ) )
+void DecartTree::inOrderDFS(int curDepth, int& maxDepth, Node* node, void visit(int ) )
 {
     if( node == nullptr ) {
         return;
     }
-
-    inOrderDFS(node->Left, visit);
+    if (curDepth > maxDepth) maxDepth = curDepth;
+    inOrderDFS(curDepth+1, maxDepth, node->Left, visit);
     visit( node->Key );
-    inOrderDFS(node->Right, visit);
-
-//    std::stack<Node*> stack;
-//    stack.push(node);
-//
-//    while(!stack.empty()) {
-//        Node* cur = stack.top();
-//        stack.pop();
-//
-//        if (cur->Right != nullptr) stack.push(cur->Right);
-//        visit(cur->Key);
-//        if (cur->Left != nullptr) stack.push(cur->Left);
-//    }
+    inOrderDFS(curDepth+1, maxDepth, node->Right, visit);
 }
+
+
 
 int main()
 {
     DecartTree tree;
+    BinTree binTree;
 
     tree.Add( 5, 11 );
     tree.Add( 18, 8 );
@@ -166,6 +233,17 @@ int main()
     tree.Add( 40, 20 );
     tree.Add( 45, 9 );
 
+    binTree.Add( 5 );
+    binTree.Add( 18 );
+    binTree.Add( 25 );
+    binTree.Add( 50 );
+    binTree.Add( 30 );
+    binTree.Add( 15 );
+    binTree.Add( 20 );
+    binTree.Add( 22 );
+    binTree.Add( 40 );
+    binTree.Add( 45 );
+
 //    size_t n;
 //    std::cin >> n;
 //    for (size_t i = 0; i < n; i++) {
@@ -175,6 +253,8 @@ int main()
 //    }
 
     tree.InOrderDFS([](int key) { std::cout << key << " "; });
+    std::cout << std::endl;
+    binTree.PreOrderDFS([](int key) { std::cout << key << " "; });
 
     return 0;
 }
