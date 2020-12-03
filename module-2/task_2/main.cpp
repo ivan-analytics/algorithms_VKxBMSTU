@@ -1,6 +1,8 @@
 #include <iostream>
 #include <stack>
 
+// 2_2. Обход дерева в порядке pre-order
+
 class BinTree {
 public:
     BinTree();
@@ -21,7 +23,7 @@ private:
 
     void add( Node*& node, int key );
     void preOrderDFS(Node* node, void visit(int ) );
-    void postOrderDFS( Node* node, void visit( Node* ) );
+    void postOrderDFS( Node* node, void visit(Node* ) );
 };
 
 BinTree::BinTree() : root( nullptr )
@@ -33,19 +35,35 @@ BinTree::~BinTree()
     postOrderDFS( root, []( Node* node ) { delete node; } );
 }
 
-// TODO: заменить рекурсивный обход итеративным
-void BinTree::postOrderDFS( Node* node, void visit( Node* ) ) // для несбалансированного дерева не применимо
+void BinTree::postOrderDFS( Node* node, void visit(Node* ) )
 {
-    std::stack<Node*> stack;
-    stack.push(node);
+    std::stack<Node*> main_stack;
+    std::stack<Node*> visit_stack;
+    main_stack.push(nullptr);
+    main_stack.push(node);
+    visit_stack.push(node);
 
-    while(!stack.empty()) {
-        Node* cur = stack.top();
-        stack.pop();
+    while(!main_stack.empty()) {
+        Node* cur = main_stack.top();
+        main_stack.pop();
 
-        if (cur->Right != nullptr) stack.push(cur->Right);
-        if (cur->Left != nullptr) stack.push(cur->Left);
-        visit(cur);
+        if (cur == nullptr) {
+            Node* visit_node = visit_stack.top();
+            visit_stack.pop();
+
+            visit(visit_node);
+        }
+
+        if ((cur != nullptr) && (cur->Right != nullptr)) {
+            main_stack.push(nullptr);
+            main_stack.push(cur->Right);
+            visit_stack.push(cur->Right);
+        }
+        if ((cur != nullptr) && (cur->Left != nullptr)) {
+            main_stack.push(nullptr);
+            main_stack.push(cur->Left);
+            visit_stack.push(cur->Left);
+        }
     }
 }
 
@@ -73,8 +91,7 @@ void BinTree::PreOrderDFS(void visit(int ) )
     preOrderDFS(root, visit);
 }
 
-// TODO: заменить рекурсивный обход итеративным
-void BinTree::preOrderDFS(Node* node, void visit(int ) ) // для несбалансированного дерева не применимо
+void BinTree::preOrderDFS(Node* node, void visit(int ) )
 {
     std::stack<Node*> stack;
     stack.push(node);
