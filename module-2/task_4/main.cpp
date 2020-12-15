@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <cassert>
 using std::cin;
 using std::cout;
 
@@ -12,8 +13,7 @@ public:
     ~AVLTree();
 
     int Add( int key );
-    void Delete( int key );
-    void DeleteByPos( int position );
+    void Delete( int position );
     void InOrderDFS( void visit(int, int ) );
 
 private:
@@ -32,8 +32,7 @@ private:
     void postOrderDFS(AVLTree::node* node, void visit(AVLTree::node*));
     void inOrderDFS( AVLTree::node*, void visit( int, int ) );
 
-    node* remove(node* p, int k);
-    node* removeByPos(node* p, int position );
+    node* remove(node* p, int position);
     std::pair<AVLTree::node*, int> add(node* p, int k, int pos);
     node* balance(node* p);
     node* rotate_right(node* p); // правый поворот вокруг p
@@ -42,7 +41,7 @@ private:
     unsigned char height(node* p);
     int bfactor(node* p);
     void fixheight(node *p);
-    long children_num(AVLTree::node* p);
+    int children_num(AVLTree::node* p);
     void fix_children_num(AVLTree::node *p);
 
     std::pair<AVLTree::node*, AVLTree::node*> find_and_remove_min(AVLTree::node* cur);
@@ -56,7 +55,7 @@ unsigned char AVLTree::height(AVLTree::node* p)
     return p ? p->height : 0;
 }
 
-long AVLTree::children_num(AVLTree::node* p)
+int AVLTree::children_num(AVLTree::node* p)
 {
     return p ? p->children_num : 0;
 }
@@ -179,13 +178,13 @@ AVLTree::~AVLTree() {
     postOrderDFS( root, []( node* node ) { delete node; } );
 }
 
-AVLTree::node *AVLTree::remove(AVLTree::node *p, int k) {
+AVLTree::node *AVLTree::remove(AVLTree::node *p, int position) {
     if( !p ) return nullptr;
-    if( k < p->key )
-        p->left = remove(p->left,k);
-    else if( k > p->key )
-        p->right = remove(p->right,k);
-    else //  k == p->key
+    if( position <= children_num(p->left) )
+        p->left = remove(p->left, position);
+    else if( position > children_num(p->left) + 1 )
+        p->right = remove(p->right, position - (children_num(p->left) + 1));
+    else //  position == position of p node
     {
         node* q = p->left;
         node* r = p->right;
@@ -213,8 +212,8 @@ AVLTree::node *AVLTree::remove(AVLTree::node *p, int k) {
     return balance(p);
 }
 
-void AVLTree::Delete(int key) {
-    root = remove(root, key);
+void AVLTree::Delete(int position) {
+    root = remove(root, children_num(root) - (position + 1) + 1);
 }
 
 //AVLTree::node* AVLTree::findmin(AVLTree::node* p) // поиск узла с минимальным ключом в дереве p
@@ -250,43 +249,40 @@ std::pair<AVLTree::node *, AVLTree::node *> AVLTree::find_and_remove_max(AVLTree
     return std::make_pair(balance(cur), res.second);
 }
 
-void AVLTree::DeleteByPos(int position) {
-
-}
-
-AVLTree::node* AVLTree::removeByPos(AVLTree::node *p, int position) {
-
-}
 
 const static int COMMAND_ADD = 1;
 const static int COMMAND_REMOVE = 2;
 int main() {
     AVLTree tree;
 
-//    int n;
-//    cin >> n;
-//    for (int i = 0; i < n; i++) {
-//        int command, param;
-//        cin >> command >> param;
-//
-//        if (command == COMMAND_ADD) {
-//            assert(param > 0);
-//            tree.Add(param);
-//        } else if (command == COMMAND_REMOVE) {
-//            //tree.Delete()
-//        } else assert(false);
-//    }
+    int n;
+    cin >> n;
+    for (int i = 0; i < n; i++) {
+        int command;
+        int param;
+        cin >> command;
+        cin >> param;
+
+        if (command == COMMAND_ADD) {
+            assert(param > 0);
+            std::cout << tree.Add(param) << std::endl;
+        } else if (command == COMMAND_REMOVE) {
+            tree.Delete(param);
+        } else assert(false);
+    }
 
 
     //for (int i = 0; i < 15; i++) std::cout << tree.Add(i) << " ";
 
-    std::cout << tree.Add(100) << " ";
-    std::cout << tree.Add(200) << " ";
-    std::cout << tree.Add(50) << " ";
-    std::cout << tree.Add(150) << " ";
-
-    // tree.InOrderDFS([](int key, int children_num) { std::cout << key << " " << children_num << std::endl; });
-    std::cout << std::endl;
+//    std::cout << tree.Add(100) << " ";
+//    std::cout << tree.Add(200) << " ";
+//    std::cout << tree.Add(50) << " ";
+//    tree.Delete(1);
+//    std::cout << tree.Add(150) << " ";
+//
+//    std::cout << std::endl;
+//    tree.InOrderDFS([](int key, int children_num) { std::cout << key << " "; });
+//    std::cout << std::endl;
     // tree.InOrderDFS([](int key, int children_num) { std::cout << key << " " << children_num << std::endl; });
 
     return 0;
