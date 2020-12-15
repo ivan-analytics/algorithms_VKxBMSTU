@@ -1,4 +1,7 @@
 #include <iostream>
+#include <vector>
+using std::cin;
+using std::cout;
 
 // удаление на хабре не оптимально, написать оптимально!
 // при удалении брать ключ из того поддерева, что глубже! (чтобы минимизировать количество вращений)
@@ -8,27 +11,30 @@ public:
     AVLTree();
     ~AVLTree();
 
-    void Add( int key );
+    int Add( int key );
     void Delete( int key );
-    void InOrderDFS( void visit(int ) );
+    void DeleteByPos( int position );
+    void InOrderDFS( void visit(int, int ) );
 
 private:
     struct node {
         int key;
         unsigned char height;
+        int children_num; // including root node itself
 
         node* left;
         node* right;
 
-        explicit node(int k) { key = k; left = right = nullptr; height = 1; }
+        explicit node(int k) { key = k; left = right = nullptr; height = 1; children_num = 1; }
     };
     node* root;
 
     void postOrderDFS(AVLTree::node* node, void visit(AVLTree::node*));
-    void inOrderDFS( AVLTree::node*, void visit( int ) );
+    void inOrderDFS( AVLTree::node*, void visit( int, int ) );
 
     node* remove(node* p, int k);
-    node* add(node* p, int k);
+    node* removeByPos(node* p, int position );
+    std::pair<AVLTree::node*, int> add(node* p, int k, int pos);
     node* balance(node* p);
     node* rotate_right(node* p); // правый поворот вокруг p
     node* rotate_left(node* q); // левый поворот вокруг q
@@ -36,11 +42,13 @@ private:
     unsigned char height(node* p);
     int bfactor(node* p);
     void fixheight(node *p);
+    long children_num(AVLTree::node* p);
+    void fix_children_num(AVLTree::node *p);
 
-    // TODO: объединить чтобы все делалось за один обход
-    // TODO: при удалении брать ключ из того поддерева, что глубже! (чтобы минимизировать количество вращений)
-    node* findmin(node* p); // поиск узла с минимальным ключом в дереве p
-    node* removemin(node* p); // удаление узла с минимальным ключом из дерева p
+    std::pair<AVLTree::node*, AVLTree::node*> find_and_remove_min(AVLTree::node* cur);
+    std::pair<AVLTree::node*, AVLTree::node*> find_and_remove_max(AVLTree::node* cur);
+    // node* findmin(node* p); // поиск узла с минимальным ключом в дереве p
+    // node* removemin(node* p); // удаление узла с минимальным ключом из дерева p
 };
 
 unsigned char AVLTree::height(AVLTree::node* p)
@@ -48,9 +56,21 @@ unsigned char AVLTree::height(AVLTree::node* p)
     return p ? p->height : 0;
 }
 
+long AVLTree::children_num(AVLTree::node* p)
+{
+    return p ? p->children_num : 0;
+}
+
 int AVLTree::bfactor(AVLTree::node* p)
 {
     return height(p->right) - height(p->left);
+}
+
+void AVLTree::fix_children_num(AVLTree::node *p) {
+    auto c_left = children_num(p->left);
+    auto c_right = children_num(p->right);
+
+    p->children_num = c_left + c_right + 1;
 }
 
 void AVLTree::fixheight(AVLTree::node *p) {
@@ -66,7 +86,9 @@ AVLTree::node *AVLTree::rotate_right(AVLTree::node *p) {
     p->left = q->right;
     q->right = p;
     fixheight(p);
+    fix_children_num(p);
     fixheight(q);
+    fix_children_num(q);
     return q;
 }
 
@@ -75,12 +97,15 @@ AVLTree::node *AVLTree::rotate_left(AVLTree::node *q) {
     q->right = p->left;
     p->left = q;
     fixheight(q);
+    fix_children_num(q);
     fixheight(p);
+    fix_children_num(p);
     return p;
 }
 
 AVLTree::node* AVLTree::balance(AVLTree::node *p) {
     fixheight(p);
+    fix_children_num(p);
     if( bfactor(p)==2 )
     {
         if( bfactor(p->right) < 0 )
@@ -96,34 +121,46 @@ AVLTree::node* AVLTree::balance(AVLTree::node *p) {
     return p;
 }
 
-AVLTree::node* AVLTree::add(node* p, int k) {
-    if( !p ) return new node(k);
-    if( k < p->key )
-        p->left = add(p->left, k);
-    else
-        p->right = add(p->right, k);
-    return balance(p);
+std::pair<AVLTree::node*, int> AVLTree::add(node* p, int k, int pos) {
+    if( !p ) {
+        // нашли куда вставлять
+        return std::make_pair(new node(k), pos);
+    }
+    std::pair<AVLTree::node*, int> res;
+    if( k < p->key ) {
+        res = add(p->left, k, (int)(pos + children_num(p->right) + 1));
+        p->left = res.first;
+    }
+    else {
+        res = add(p->right, k, pos);
+        p->right = res.first;
+    }
+    return std::make_pair(balance(p), res.second);
 }
 
-void AVLTree::Add(int key) {
-    root = add(root, key);
+int AVLTree::Add(int key) {
+    auto res = add(root, key, 0);
+    root = res.first;
+    return res.second;
 }
+
+
 
 AVLTree::AVLTree() : root(nullptr) {}
 
-void AVLTree::InOrderDFS( void visit(int ) )
+void AVLTree::InOrderDFS( void visit(int, int) )
 {
     inOrderDFS(root, visit);
 }
 
-void AVLTree::inOrderDFS( AVLTree::node* node, void visit( int ) )
+void AVLTree::inOrderDFS( AVLTree::node* node, void visit( int, int ) )
 {
     if( node == nullptr ) {
         return;
     }
 
     inOrderDFS(node->left, visit);
-    visit( node->key );
+    visit( node->key , (int)node->children_num);
     inOrderDFS(node->right, visit);
 }
 
@@ -154,10 +191,24 @@ AVLTree::node *AVLTree::remove(AVLTree::node *p, int k) {
         node* r = p->right;
         delete p;
         if( !r ) return q;
-        node* min = findmin(r);
-        min->right = removemin(r);
-        min->left = q;
-        return balance(min);
+        if( !q ) return r;
+
+        // если есть оба поддерева
+        if (q->height < r->height) {
+            auto res = find_and_remove_max(q);
+            node* max = res.second;
+            max->left = res.first;
+            max->right = r;
+            return balance(max);
+        } else {
+            auto res = find_and_remove_min(r);
+            node* min = res.second;
+            min->right = res.first;
+            min->left = q;
+            return balance(min);
+        }
+
+
     }
     return balance(p);
 }
@@ -166,26 +217,77 @@ void AVLTree::Delete(int key) {
     root = remove(root, key);
 }
 
-AVLTree::node* AVLTree::findmin(AVLTree::node* p) // поиск узла с минимальным ключом в дереве p
-{
-    return p->left?findmin(p->left):p;
+//AVLTree::node* AVLTree::findmin(AVLTree::node* p) // поиск узла с минимальным ключом в дереве p
+//{
+//    return p->left ? findmin(p->left) : p;
+//}
+//
+//AVLTree::node* AVLTree::removemin(AVLTree::node* p) // удаление узла с минимальным ключом из дерева p
+//{
+//    if( p->left == nullptr )
+//        return p->right;
+//    p->left = removemin(p->left);
+//    return balance(p);
+//}
+
+std::pair<AVLTree::node*, AVLTree::node*> AVLTree::find_and_remove_min(AVLTree::node* cur) {
+    if(cur->left == nullptr ) {
+        // нашли удаляемый узел
+        return std::make_pair(cur->right, cur);
+    }
+    auto res = find_and_remove_min(cur->left);
+    cur->left = res.first;
+    return std::make_pair(balance(cur), res.second);
 }
 
-AVLTree::node* AVLTree::removemin(AVLTree::node* p) // удаление узла с минимальным ключом из дерева p
-{
-    if( p->left == nullptr )
-        return p->right;
-    p->left = removemin(p->left);
-    return balance(p);
+std::pair<AVLTree::node *, AVLTree::node *> AVLTree::find_and_remove_max(AVLTree::node *cur) {
+    if(cur->right == nullptr ) {
+        // нашли удаляемый узел
+        return std::make_pair(cur->left, cur);
+    }
+    auto res = find_and_remove_max(cur->right);
+    cur->right = res.first;
+    return std::make_pair(balance(cur), res.second);
 }
 
+void AVLTree::DeleteByPos(int position) {
 
+}
+
+AVLTree::node* AVLTree::removeByPos(AVLTree::node *p, int position) {
+
+}
+
+const static int COMMAND_ADD = 1;
+const static int COMMAND_REMOVE = 2;
 int main() {
     AVLTree tree;
 
-    for (int i = 0; i < 15; i++) tree.Add(i);
+//    int n;
+//    cin >> n;
+//    for (int i = 0; i < n; i++) {
+//        int command, param;
+//        cin >> command >> param;
+//
+//        if (command == COMMAND_ADD) {
+//            assert(param > 0);
+//            tree.Add(param);
+//        } else if (command == COMMAND_REMOVE) {
+//            //tree.Delete()
+//        } else assert(false);
+//    }
 
-    tree.InOrderDFS([](int key) { std::cout << key << " "; });
+
+    //for (int i = 0; i < 15; i++) std::cout << tree.Add(i) << " ";
+
+    std::cout << tree.Add(100) << " ";
+    std::cout << tree.Add(200) << " ";
+    std::cout << tree.Add(50) << " ";
+    std::cout << tree.Add(150) << " ";
+
+    // tree.InOrderDFS([](int key, int children_num) { std::cout << key << " " << children_num << std::endl; });
+    std::cout << std::endl;
+    // tree.InOrderDFS([](int key, int children_num) { std::cout << key << " " << children_num << std::endl; });
 
     return 0;
 }
