@@ -4,8 +4,24 @@
 using std::cin;
 using std::cout;
 
-// удаление на хабре не оптимально, написать оптимально!
-// при удалении брать ключ из того поддерева, что глубже! (чтобы минимизировать количество вращений)
+/*
+4_1. Солдаты. В одной военной части решили построить в одну шеренгу по росту.
+Т.к. часть была далеко не образцовая, то солдаты часто приходили не вовремя,
+ а то их и вовсе приходилось выгонять из шеренги за плохо начищенные сапоги.
+ Однако солдаты в процессе прихода и ухода должны были всегда быть выстроены по росту – сначала самые высокие,
+ а в конце – самые низкие. За расстановку солдат отвечал прапорщик,
+ который заметил интересную особенность – все солдаты в части разного роста.
+ Ваша задача состоит в том, чтобы помочь прапорщику правильно расставлять солдат,
+ а именно для каждого приходящего солдата указывать, перед каким солдатом в строе он должен становится.
+
+ Требования: скорость выполнения команды - O(log n).
+Формат входных данных.
+Первая строка содержит число N – количество команд (1 ≤ N ≤ 30 000).
+ В каждой следующей строке содержится описание команды: число 1 и X если солдат приходит
+ в строй (X – рост солдата, натуральное число до 100 000 включительно) и число 2 и Y если солдата,
+ стоящим в строе на месте Y надо удалить из строя. Солдаты в строе нумеруются с нуля.
+
+ */
 
 class AVLTree {
 public:
@@ -16,7 +32,7 @@ public:
     void Delete( int position );
     void InOrderDFS( void visit(int, int ) );
 
-private:
+
     struct node {
         int key;
         unsigned char height;
@@ -27,6 +43,8 @@ private:
 
         explicit node(int k) { key = k; left = right = nullptr; height = 1; children_num = 1; }
     };
+
+private:
     node* root;
 
     void postOrderDFS(AVLTree::node* node, void visit(AVLTree::node*));
@@ -46,9 +64,9 @@ private:
 
     std::pair<AVLTree::node*, AVLTree::node*> find_and_remove_min(AVLTree::node* cur);
     std::pair<AVLTree::node*, AVLTree::node*> find_and_remove_max(AVLTree::node* cur);
-    // node* findmin(node* p); // поиск узла с минимальным ключом в дереве p
-    // node* removemin(node* p); // удаление узла с минимальным ключом из дерева p
 };
+
+AVLTree::AVLTree() : root(nullptr) {}
 
 unsigned char AVLTree::height(AVLTree::node* p)
 {
@@ -145,7 +163,7 @@ int AVLTree::Add(int key) {
 
 
 
-AVLTree::AVLTree() : root(nullptr) {}
+
 
 void AVLTree::InOrderDFS( void visit(int, int) )
 {
@@ -206,8 +224,6 @@ AVLTree::node *AVLTree::remove(AVLTree::node *p, int position) {
             min->left = q;
             return balance(min);
         }
-
-
     }
     return balance(p);
 }
@@ -215,19 +231,6 @@ AVLTree::node *AVLTree::remove(AVLTree::node *p, int position) {
 void AVLTree::Delete(int position) {
     root = remove(root, children_num(root) - (position + 1) + 1);
 }
-
-//AVLTree::node* AVLTree::findmin(AVLTree::node* p) // поиск узла с минимальным ключом в дереве p
-//{
-//    return p->left ? findmin(p->left) : p;
-//}
-//
-//AVLTree::node* AVLTree::removemin(AVLTree::node* p) // удаление узла с минимальным ключом из дерева p
-//{
-//    if( p->left == nullptr )
-//        return p->right;
-//    p->left = removemin(p->left);
-//    return balance(p);
-//}
 
 std::pair<AVLTree::node*, AVLTree::node*> AVLTree::find_and_remove_min(AVLTree::node* cur) {
     if(cur->left == nullptr ) {
@@ -252,6 +255,7 @@ std::pair<AVLTree::node *, AVLTree::node *> AVLTree::find_and_remove_max(AVLTree
 
 const static int COMMAND_ADD = 1;
 const static int COMMAND_REMOVE = 2;
+
 int main() {
     AVLTree tree;
 
@@ -270,20 +274,6 @@ int main() {
             tree.Delete(param);
         } else assert(false);
     }
-
-
-    //for (int i = 0; i < 15; i++) std::cout << tree.Add(i) << " ";
-
-//    std::cout << tree.Add(100) << " ";
-//    std::cout << tree.Add(200) << " ";
-//    std::cout << tree.Add(50) << " ";
-//    tree.Delete(1);
-//    std::cout << tree.Add(150) << " ";
-//
-//    std::cout << std::endl;
-//    tree.InOrderDFS([](int key, int children_num) { std::cout << key << " "; });
-//    std::cout << std::endl;
-    // tree.InOrderDFS([](int key, int children_num) { std::cout << key << " " << children_num << std::endl; });
 
     return 0;
 }
