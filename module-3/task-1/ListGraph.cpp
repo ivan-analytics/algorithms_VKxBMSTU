@@ -1,23 +1,4 @@
-#include <vector>
-#include <cassert>
-#include "IGraph.h"
-
-using std::vector;
-
-class ListGraph : public IGraph {
-public:
-    explicit ListGraph(int vertexCount );
-    explicit ListGraph(const IGraph& graph );
-
-    void AddEdge(int from, int to) override;
-
-    int VerticesCount() const override;
-    std::vector<int> GetNextVertices(int vertex) const override;
-    std::vector<int> GetPrevVertices(int vertex) const override;
-
-private:
-    vector<vector<int>> adjacencyLists;
-};
+#include "ListGraph.h"
 
 ListGraph::ListGraph(int vertexCount ) :
         adjacencyLists( vertexCount )
@@ -58,9 +39,4 @@ std::vector<int> ListGraph::GetPrevVertices(int vertex ) const
             if( adjacencyLists[from][i] == vertex )
                 result.push_back( from );
     return result;
-}
-
-int main() {
-
-    return 0;
 }
