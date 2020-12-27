@@ -4,6 +4,7 @@ ListGraph::ListGraph(int vertexCount ) :
         adjacencyLists( vertexCount )
 {}
 
+// не будет работать корректно для копирования ориентированного графа для конструирования неориентированного
 ListGraph::ListGraph(const IGraph& graph )
 {
     adjacencyLists.resize( graph.VerticesCount() );
@@ -17,6 +18,7 @@ void ListGraph::AddEdge(int from, int to )
     assert( to >= 0 && to < adjacencyLists.size() );
 
     adjacencyLists[from].push_back( to );
+    adjacencyLists[to].push_back( from ); // !!! добавлено чтобы граф был неориентированным
 }
 
 int ListGraph::VerticesCount() const
