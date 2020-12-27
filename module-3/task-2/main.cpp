@@ -105,11 +105,12 @@ int min_paths_num(const IGraph& graph, int from, int to) {
         if (current == NULL_INT) {
             for (auto it = bfsQueue.begin(); *it != NULL_INT && it != bfsQueue.end(); it++) {
                 prev_layers_vertices.insert(*it);
+                bfsQueue.push_back(NULL_INT);
             }
             continue;
         }
         vector<int> adjacentVeticies = graph.GetNextVertices(current);
-        bfsQueue.push_back(NULL_INT);
+
         for (int &adjacentVeticie : adjacentVeticies) {
             if (!visited[adjacentVeticie]) {
                 bfsQueue.push_back(adjacentVeticie);
@@ -136,40 +137,56 @@ int main()
 //  0 ----> 1    |
 //  | \  /    \ /
 //  3   4 ---> 2 ------> 6 ----- > 7
-//    int v; cin >> v;
-//    ListGraph graph(v);
-//    int n; cin >> n;
-//    for (int i = 0; i < n; i++) {
-//        int from; int to;
-//        cin >> from >> to;
-//        graph.AddEdge(from, to);
-//    }
-//    int u; int w;
-//    cin >> u >> w;
+    int v; cin >> v;
+    ListGraph graph(v);
+    int n; cin >> n;
+    for (int i = 0; i < n; i++) {
+        int from; int to;
+        cin >> from >> to;
+        graph.AddEdge(from, to);
+    }
+    int u; int w;
+    cin >> u >> w;
 
-    ListGraph graph(12);
-    graph.AddEdge( 0, 1 );
-    graph.AddEdge( 0, 3 );
-    graph.AddEdge( 0, 4 );
-    graph.AddEdge( 1, 4 );
-    graph.AddEdge( 4, 2 );
-    graph.AddEdge( 1, 2 );
-    graph.AddEdge( 0, 5 );
-    graph.AddEdge( 5, 2 );
+//     1 -- 4 ---- 6
+//   /              \
+//  0                5
+//   \              /
+//     2 -------- 3
+//    ListGraph graph(7);
+//    graph.AddEdge( 0, 1 );
+//    graph.AddEdge( 0, 2 );
+//    graph.AddEdge( 1, 4 );
+//    graph.AddEdge( 2, 3 );
+//    graph.AddEdge( 4, 6 );
+//    graph.AddEdge( 3, 5 );
+//    graph.AddEdge( 6, 5 );
+//    std::cout << min_paths_num( graph, 0, 5 ); // НЕ РАБОТАЕТ !!!
 
-    graph.AddEdge( 2, 6 );
-    graph.AddEdge( 6, 7 );
 
-    graph.AddEdge( 7, 8 );
-    graph.AddEdge( 7, 11 );
-    graph.AddEdge( 8, 10 );
-    graph.AddEdge( 8, 9 );
-    graph.AddEdge( 11, 10 );
+
+//     1 --  4
+//   /       |  \
+//  0        |  5
+//   \       |  /
+//     2 --- 3
+
+
+
+
+//    graph.AddEdge( 2, 6 );
+//    graph.AddEdge( 6, 7 );
+//
+//    graph.AddEdge( 7, 8 );
+//    graph.AddEdge( 7, 11 );
+//    graph.AddEdge( 8, 10 );
+//    graph.AddEdge( 8, 9 );
+//    graph.AddEdge( 11, 10 );
 
 
     // BFS( graph, 0, []( int vertex ) { std::cout << vertex << " "; } );
-//     std::cout << min_paths_num( graph, u, w );
-    std::cout << min_paths_num( graph, 0, 10 );
+     std::cout << min_paths_num( graph, u, w );
+    //std::cout << min_paths_num( graph, 0, 12 );
 
     return 0;
 }
