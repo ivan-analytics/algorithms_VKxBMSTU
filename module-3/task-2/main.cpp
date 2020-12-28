@@ -45,7 +45,6 @@ ListGraph::ListGraph(int vertexCount ) :
         adjacencyLists( vertexCount )
 {}
 
-// не будет работать корректно для копирования ориентированного графа для конструирования неориентированного
 ListGraph::ListGraph(const IGraph& graph )
 {
     adjacencyLists.resize( graph.VerticesCount() );
@@ -59,7 +58,7 @@ void ListGraph::AddEdge(int from, int to )
     assert( to >= 0 && to < adjacencyLists.size() );
 
     adjacencyLists[from].push_back( to );
-    adjacencyLists[to].push_back( from ); // !!! добавлено чтобы граф был неориентированным
+    adjacencyLists[to].push_back( from ); // добавлено чтобы граф был неориентированным
 }
 
 int ListGraph::VerticesCount() const
@@ -130,13 +129,6 @@ int min_paths_num(const IGraph& graph, int from, int to) {
 
 int main()
 {
-//  5 --------_
-//  |           \
-//  |            \
-//  |            |
-//  0 ----> 1    |
-//  | \  /    \ /
-//  3   4 ---> 2 ------> 6 ----- > 7
     int v; cin >> v;
     ListGraph graph(v);
     int n; cin >> n;
@@ -148,45 +140,6 @@ int main()
     int u; int w;
     cin >> u >> w;
 
-//     1 -- 4 ---- 6
-//   /              \
-//  0                5
-//   \              /
-//     2 -------- 3
-//    ListGraph graph(7);
-//    graph.AddEdge( 0, 1 );
-//    graph.AddEdge( 0, 2 );
-//    graph.AddEdge( 1, 4 );
-//    graph.AddEdge( 2, 3 );
-//    graph.AddEdge( 4, 6 );
-//    graph.AddEdge( 3, 5 );
-//    graph.AddEdge( 6, 5 );
-//    std::cout << min_paths_num( graph, 0, 5 ); // НЕ РАБОТАЕТ !!!
-
-
-
-//     1 --  4
-//   /       |  \
-//  0        |  5
-//   \       |  /
-//     2 --- 3
-
-
-
-
-//    graph.AddEdge( 2, 6 );
-//    graph.AddEdge( 6, 7 );
-//
-//    graph.AddEdge( 7, 8 );
-//    graph.AddEdge( 7, 11 );
-//    graph.AddEdge( 8, 10 );
-//    graph.AddEdge( 8, 9 );
-//    graph.AddEdge( 11, 10 );
-
-
-    // BFS( graph, 0, []( int vertex ) { std::cout << vertex << " "; } );
-     std::cout << min_paths_num( graph, u, w );
-    //std::cout << min_paths_num( graph, 0, 12 );
-
+    std::cout << min_paths_num( graph, u, w );
     return 0;
 }
